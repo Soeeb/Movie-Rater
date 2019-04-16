@@ -4,8 +4,7 @@ app = Flask(__name__)
 path = os.getcwd()+"/static/images"
 wsgi_app = app.wsgi_app
 
-class Database:
-
+class Database():
     def __init__(self, conn, c):
         self.conn = conn
         self.c = c
@@ -39,51 +38,44 @@ class Database:
                 self.rating = rating
                 self.review = review
 
-
         with self.conn:
-            self.c.execute("SELECT * FROM MOVIES")
+            self.c.execute("SELECT * FROM movies")
             temp_list = []
             for temp in self.c.fetchall():
                 temp_list.append(Movie(temp[0], temp[1], temp[2]))
             return temp_list
 
 #used during first time to create a table
+'''
 conn = sqlite3.connect(os.getcwd() +'/static/movie_database.db')
 c = conn.cursor()
 c.execute("""CREATE TABLE movies (
             filename text,
             rating inter,
             review text)
-            """) 
+            """)  '''
             
-
-
-
 @app.route('/')
 def main():
-    database = Database(sqlite3.connect(os.getcwd() +'/static/movie_database.db'), 
-        sqlite3.connect(os.getcwd() +'/static/movie_database.db').cursor())
-
+    database = Database(sqlite3.connect(os.getcwd() +'/static/movie_database.db'), sqlite3.connect(os.getcwd() +'/static/movie_database.db').cursor())
     database.export_filename_database()
     return render_template('index.html', movies = database.import_all())
-
 
 @app.route('/rate', methods = ["POST","GET"])
 def rateMain():
     database = Database(sqlite3.connect(os.getcwd() +'/static/movie_database.db'), 
         sqlite3.connect(os.getcwd() +'/static/movie_database.db').cursor())
-    movies = database.import_all()
-    rating = None
+    print (database.import_all())
+    rating = "No Value"
     if request.method == "POST":
         form = request.form
         filename = request.args.get("imageName")
-        for movie in movies:
+        for movie in database.import_all():
             if movie.filename == filename:
                 database.export_rating(filename, int(form["rating"]))
-                rating = movie.rating
+                rating = "Yes"
     return render_template("rate.html", rating = rating)
     
-
 if __name__ == '__main__':
     import os
     HOST = os.environ.get('SERVER_HOST', 'localhost')
