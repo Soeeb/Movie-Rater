@@ -4,9 +4,8 @@ app = Flask(__name__)
 path = os.getcwd()+"/static/images"
 wsgi_app = app.wsgi_app
 
-def add_to_file():
+def add_to_file(conn, c):
     with conn:
-        c = conn.cursor()
         for filename in os.listdir(path):
             c.execute("SELECT filename FROM movies WHERE filename=?",(filename,))
             if c.fetchone():
@@ -14,10 +13,26 @@ def add_to_file():
             else:
                 c.execute("INSERT INTO movies (filename) VALUES (?)", (filename,))
 
-def import_filename():
+def import_filename(conn, c):
     with conn:
         c.execute("SELECT filename FROM movies")
         return c.fetchall()
+
+def import_file_all(conn,c):
+    class Movie:
+        def __init__(self, filename, rating, review):
+            self.filename = filename
+            self.rating = rating
+            self.review = review
+
+        def 
+
+    with conn:
+        c.execute("SELECT * FROM MOVIES")
+        temp_list = []
+        for temp in c.fetchall():
+            temp_list.append(Movie(temp[0], temp[1], temp[2]))
+        return temp_list
 
 #used during first time to create a table
 #c.execute("""CREATE TABLE movies (
@@ -26,23 +41,28 @@ def import_filename():
 #            review text)
 #            """)
 
-class Movie:
-    def __init__(self, filename):
-        self.filename = filename
-        self.rating = []
-        self.review = ""
+
 
 @app.route('/')
 def main():
     conn = sqlite3.connect(os.getcwd() +'/static/movie_database.db')
     c = conn.cursor()
-
-    add_to_file()
-    movies = []
-    movies_import = import_filename()
-    for movie in movies_import:
-        movies.append(Movie(movie[0]))
+    add_to_file(conn, c)
+    movies = import_file_all(conn,c)
     return render_template('index.html', movies = movies)
+
+
+@app.route('/rate', methods = ["POST","GET"])
+def rateMain():
+    conn = sqlite3.connect(os.getcwd() +'/static/movie_database.db')
+    c = conn.cursor()
+    movies = import_file_all(conn,c)
+    rating = None
+    if request.method == "POST":
+        form = request.form
+        filename = request.args.get("imageName")
+    return render_template("rate.html", rating = rating)
+    
 
 if __name__ == '__main__':
     import os
