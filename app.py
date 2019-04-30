@@ -25,7 +25,8 @@ def export_rating(filename, rating, c, conn):
 def import_rating(c, conn, filename):
     with conn:
         c.execute("SELECT rating FROM movies WHERE filename=?", (filename,))
-        return c.fetchone()
+        output = c.fetchone()
+        return output[0]
                 
 def import_all(c, conn):
     class Movie:
