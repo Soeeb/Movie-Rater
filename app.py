@@ -20,7 +20,7 @@ def import_filename(c, conn):
 
 def export_rating(filename, rating, c, conn):
     with conn:
-            c.execute("UPDATE movies SET rating=? WHERE filename=?",(rating, filename))
+        c.execute("UPDATE movies SET rating=? WHERE filename=?",(rating, filename))
 
 def import_rating(c, conn, filename):
     with conn:
@@ -28,6 +28,16 @@ def import_rating(c, conn, filename):
         output = c.fetchone()
         return output[0]
                 
+def export_review(c, conn, review, filename):
+    with conn:
+        c.execute("UPDATE movies SET review=? WHERE filename=?",(review, filename))
+
+def import_review(c, conn, filename):
+    with conn:
+        c.execute("SELECT review FROM movies WHERE filename=?", (filename,))
+        output = c.fetchone()
+        return output[0]
+
 def import_all(c, conn):
     class Movie:
         def __init__(self, filename, rating, review):
@@ -72,14 +82,17 @@ def rateMain():
     print (import_all(c, conn))
     filename = request.args.get("imageName")
     rating = import_rating(c, conn, filename)
+    review = import_review(c, conn, filename)
     if request.method == "POST":
         form = request.form
         for movie in import_all(c, conn):
             if movie.filename == filename:
                 export_rating(filename, int(form["rating"]), c, conn)
                 rating = int(form["rating"])
+                export_review(c, conn, form["review"], filename)
+                review = form["review"]
     close(c, conn)
-    return render_template("rate.html", rating = rating)
+    return render_template("rate.html", rating = rating, review = review)
     
 if __name__ == '__main__':
     import os
