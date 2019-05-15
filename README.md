@@ -1,2 +1,3 @@
 # Movie-rater
-Code of stuff, don't steal.
+Flask based rater for movies.
+NCEA Level 3 internal.
