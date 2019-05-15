@@ -164,6 +164,7 @@ def rateMain():
                     export_title(c, conn, form['title'], filename)
                     export_year(c, conn, int(form['year']), filename)
                     flash("Movie reviewed successfully!", "success")
+                    return redirect(request.url)
         elif request.form.get('delete') == 'delete':
             delete(c, conn, filename)
             close(c, conn)
@@ -184,18 +185,17 @@ def uploadMain():
         if file.filename == "":
             flash('No file selected!', 'warning')
             return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            import_upload(c, conn, filename)
-            flash("File has been uploaded successfully!", "success")
+        if file and allowed_file(file.filename) and request.form['director'] != "" and request.form['studio'] != "" and request.form['title'] != "" and request.form['year'] != "":
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                import_upload(c, conn, filename)
+                export_director(c, conn, request.form['director'], filename)
+                export_studio(c, conn, request.form['studio'], filename)
+                export_title(c, conn, request.form['title'], filename)
+                export_year(c, conn, int(request.form['year']), filename)
+                flash("File has been uploaded successfully!", "success")
         else:
-            flash('Incorrect file type!', 'warning')
-
-        export_director(c, conn, request.form['director'], filename)
-        export_studio(c, conn, request.form['studio'], filename)
-        export_title(c, conn, request.form['title'], filename)
-        export_year(c, conn, int(request.form['year']), filename)
+            flash('Incorrect file type!/Not all forms filled in!', 'warning')
     return render_template("upload.html")
     
 if __name__ == '__main__':
