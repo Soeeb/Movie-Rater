@@ -52,16 +52,20 @@ def delete(c, conn, filename):
 
 def import_all(c, conn):
     class Movie:
-        def __init__(self, filename, rating, review):
+        def __init__(self, filename, rating, review, year, director, studio, title):
             self.filename = filename
             self.rating = rating
             self.review = review
+            self.year = year
+            self.director = director
+            self.studio = studio
+            self.title = title
 
     with conn:
         c.execute("SELECT * FROM movies")
         temp_list = []
         for temp in c.fetchall():
-            temp_list.append(Movie(temp[0], temp[1], temp[2]))
+            temp_list.append(Movie(temp[0], temp[1], temp[2], temp[3], temp[4], temp[5], temp[6]))
         return temp_list
 
 def export_year(c, conn, year, filename):
@@ -113,18 +117,18 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 #used during first time to create a table
-
+'''
 conn = sqlite3.connect(os.getcwd() +'/static/movie_database.db')
 c = conn.cursor()
 c.execute("""CREATE TABLE movies (
             filename text,
             rating inter,
-            review text
+            review text,
             year inter,
             director text,
             studio text,
             title text)
-            """)  
+            """)'''
        
 @app.route('/')
 def main():
@@ -142,6 +146,10 @@ def rateMain():
     filename = request.args.get("imageName")
     rating = import_rating(c, conn, filename)
     review = import_review(c, conn, filename)
+    year = import_year(c, conn, filename)
+    director = import_director(c, conn, filename)
+    studio = import_studio(c, conn, filename)
+    title = import_title(c, conn, filename)
     if request.method == "POST":
         if request.form.get('submit') == 'submit':
             form = request.form
@@ -151,6 +159,10 @@ def rateMain():
                     rating = int(form["rating"])
                     export_review(c, conn, form["review"], filename)
                     review = form["review"]
+                    export_director(c, conn, form['director'], filename)
+                    export_studio(c, conn, form['studio'], filename)
+                    export_title(c, conn, form['title'], filename)
+                    export_year(c, conn, int(form['year']), filename)
                     flash("Movie reviewed successfully!", "success")
         elif request.form.get('delete') == 'delete':
             delete(c, conn, filename)
@@ -158,7 +170,7 @@ def rateMain():
             flash("File deleted successfully!", "success")
             return redirect(url_for('main'))
     close(c, conn)
-    return render_template("rate.html", rating = rating, review = review)
+    return render_template("rate.html", rating = rating, review = review, year = year, director = director, studio = studio, title = title)
 
 @app.route('/upload', methods = ["POST", "GET"])
 def uploadMain():
@@ -179,6 +191,11 @@ def uploadMain():
             flash("File has been uploaded successfully!", "success")
         else:
             flash('Incorrect file type!', 'warning')
+
+        export_director(c, conn, request.form['director'], filename)
+        export_studio(c, conn, request.form['studio'], filename)
+        export_title(c, conn, request.form['title'], filename)
+        export_year(c, conn, int(request.form['year']), filename)
     return render_template("upload.html")
     
 if __name__ == '__main__':
